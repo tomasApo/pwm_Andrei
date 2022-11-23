@@ -1,0 +1,44 @@
+#![deny(unsafe_code)]
+#![no_main]
+#![no_std]
+
+
+use cortex_m::asm;
+use cortex_m_rt::entry;
+use panic_semihosting as _;
+use stm32f3xx_hal::{self as hal, pac, prelude::*, pwm};
+
+
+#[entry]
+fn main() -> ! {
+
+    let dp = pac::Peripherals::take().unwrap();
+
+    let mut rcc = dp.RCC.constrain();
+    let mut gpioe = dp.GPIOE.split(&mut rcc.ahb);
+
+    let mut led = gpioe
+        .pe13
+        .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
+
+    led.set_low().unwrap();
+
+    loop {
+        led.toggle().unwrap();
+        cortex_m::asm::delay(1_000_000);
+
+        
+        // Toggle by hand.
+        // Uses `StatefulOutputPin` instead of `ToggleableOutputPin`.
+        // Logically it is the same.
+        
+        /*
+        if led.is_set_low().unwrap() {
+            led.set_high().unwrap();
+        } else {
+            led.set_low().unwrap();
+        }
+        cortex_m::asm::delay(1_000_000);
+         */
+    }
+}
